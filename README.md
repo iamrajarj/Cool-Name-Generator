@@ -1,4 +1,4 @@
-# flutter_application_1
+# Cool Name Generator
 
 A new Flutter project. This is a basic Trendy Cool Word Generator made by Sachal Raja.
 
