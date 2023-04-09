@@ -1,6 +1,10 @@
+// #Sachal Raja  #Om Kumar #Aisha Naoman
+
 import 'package:english_words/english_words.dart';
+import 'package:flutter_application_1/sharedpref.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+// import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
   runApp(MyApp());
@@ -17,7 +21,8 @@ class MyApp extends StatelessWidget {
         title: 'Namer App',
         theme: ThemeData(
           useMaterial3: true,
-          colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
+          colorScheme:
+              ColorScheme.fromSeed(seedColor: Color.fromARGB(255, 211, 34, 255)),
         ),
         home: MyHomePage(),
       ),
@@ -28,25 +33,33 @@ class MyApp extends StatelessWidget {
 class MyAppState extends ChangeNotifier {
   var current = WordPair.random();
 
-  // Gets next word
   void getNext() {
     current = WordPair.random();
     notifyListeners();
   }
 
-  var favorites = <WordPair>[];
+  SharedPref pref = SharedPref();
+  List<String> favorites = <String>[];
+
+  MyAppState() {
+    loadPrefs();
+  }
+
+  Future<void> loadPrefs() async {
+    favorites = await pref.read("Fav") ?? <String>[];
+  }
 
   void toggleFavorite() {
-    if (favorites.contains(current)) {
-      favorites.remove(current);
+    final currentString = current.toLowerCase().toString();
+    if (favorites.contains(currentString)) {
+      favorites.remove(currentString);
     } else {
-      favorites.add(current);
+      favorites.add(currentString);
     }
+    pref.save("Fav", favorites);
     notifyListeners();
   }
 }
-
-// ...
 
 class MyHomePage extends StatefulWidget {
   @override
@@ -115,7 +128,7 @@ class GeneratorPage extends StatelessWidget {
     var pair = appState.current;
 
     IconData icon;
-    if (appState.favorites.contains(pair)) {
+    if (appState.favorites.contains(pair.asLowerCase.toString())) {
       icon = Icons.favorite;
     } else {
       icon = Icons.favorite_border;
@@ -152,9 +165,34 @@ class GeneratorPage extends StatelessWidget {
   }
 }
 
-// ...
+class BigCard extends StatelessWidget {
+  const BigCard({
+    Key? key,
+    required this.pair,
+  }) : super(key: key);
 
-// ...
+  final WordPair pair;
+
+  @override
+  Widget build(BuildContext context) {
+    var theme = Theme.of(context);
+    var style = theme.textTheme.displayMedium!.copyWith(
+      color: theme.colorScheme.onPrimary,
+    );
+
+    return Card(
+      color: theme.colorScheme.primary,
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Text(
+          pair.asLowerCase,
+          style: style,
+          semanticsLabel: pair.asPascalCase,
+        ),
+      ),
+    );
+  }
+}
 
 class FavoritesPage extends StatelessWidget {
   @override
@@ -162,7 +200,7 @@ class FavoritesPage extends StatelessWidget {
     var appState = context.watch<MyAppState>();
 
     if (appState.favorites.isEmpty) {
-      return Center(
+      return const Center(
         child: Text('No favorites yet.'),
       );
     }
@@ -171,45 +209,14 @@ class FavoritesPage extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.all(20),
-          child: Text('You have '
-              '${appState.favorites.length} favorites:'),
+          child: Text('You have ${appState.favorites.length} favorites:'),
         ),
         for (var pair in appState.favorites)
           ListTile(
-            leading: Icon(Icons.favorite),
-            title: Text(pair.asLowerCase),
+            leading: const Icon(Icons.favorite),
+            title: Text(pair),
           ),
       ],
-    );
-  }
-}
-
-class BigCard extends StatelessWidget {
-  const BigCard({
-    super.key,
-    required this.pair,
-  });
-
-  final WordPair pair;
-
-  @override
-  Widget build(BuildContext context) {
-    var theme = Theme.of(context);
-
-    var style = theme.textTheme.displayMedium!.copyWith(
-      color: theme.colorScheme.onPrimary,
-    );
-
-    return Card(
-      color: theme.colorScheme.primary,
-      child: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Text(
-          pair.asPascalCase,
-          style: style,
-          semanticsLabel: pair.asPascalCase,
-        ),
-      ),
     );
   }
 }
